@@ -146,7 +146,7 @@ loop {
 
 ## Getting Started With Runtime Metrics
 
-This unstable functionality requires `tokio_unstable`, and the  `rt` crate
+Not all runtime metrics are stable. Using unstable metrics requires `tokio_unstable`, and the  `rt` crate
 feature. To enable `tokio_unstable`, the `--cfg` `tokio_unstable` must be passed
 to `rustc` when compiling. You can do this by setting the `RUSTFLAGS`
 environment variable before compiling your application; e.g.:
