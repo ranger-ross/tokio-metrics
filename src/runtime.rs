@@ -1260,33 +1260,33 @@ impl RuntimeIntervals {
         #[cfg(tokio_unstable)]
         let io_driver_ready_events = self.runtime.io_driver_ready_count();
 
+        #[cfg(not(tokio_unstable))]
         let mut metrics = RuntimeMetrics {
             workers_count: self.runtime.num_workers(),
             elapsed: now - self.started_at,
             global_queue_depth: self.runtime.global_queue_depth(),
-            #[cfg(tokio_unstable)]
+            min_park_count: u64::MAX,
+            min_busy_duration: Duration::from_secs(1000000000),
+            ..Default::default()
+        };
+
+        #[cfg(tokio_unstable)]
+        let mut metrics = RuntimeMetrics {
+            workers_count: self.runtime.num_workers(),
+            elapsed: now - self.started_at,
+            global_queue_depth: self.runtime.global_queue_depth(),
             num_remote_schedules: num_remote_schedules - self.num_remote_schedules,
             min_park_count: u64::MAX,
-            #[cfg(tokio_unstable)]
             min_noop_count: u64::MAX,
-            #[cfg(tokio_unstable)]
             min_steal_count: u64::MAX,
-            #[cfg(tokio_unstable)]
             min_local_schedule_count: u64::MAX,
-            #[cfg(tokio_unstable)]
             min_overflow_count: u64::MAX,
-            #[cfg(tokio_unstable)]
             min_polls_count: u64::MAX,
             min_busy_duration: Duration::from_secs(1000000000),
-            #[cfg(tokio_unstable)]
             min_local_queue_depth: usize::MAX,
-            #[cfg(tokio_unstable)]
             mean_poll_duration_worker_min: Duration::MAX,
-            #[cfg(tokio_unstable)]
             poll_time_histogram: vec![0; self.runtime.poll_time_histogram_num_buckets()],
-            #[cfg(tokio_unstable)]
             budget_forced_yield_count: budget_forced_yields - self.budget_forced_yield_count,
-            #[cfg(tokio_unstable)]
             io_driver_ready_count: io_driver_ready_events - self.io_driver_ready_count,
             ..Default::default()
         };
@@ -1411,25 +1411,25 @@ impl Worker {
             vec![]
         };
 
-        Worker {
+        #[cfg(not(tokio_unstable))]
+        return Worker {
             worker,
             total_park_count: rt.worker_park_count(worker),
-            #[cfg(tokio_unstable)]
+            total_busy_duration: rt.worker_total_busy_duration(worker),
+        };
+        #[cfg(tokio_unstable)]
+        return Worker {
+            worker,
+            total_park_count: rt.worker_park_count(worker),
             total_noop_count: rt.worker_noop_count(worker),
-            #[cfg(tokio_unstable)]
             total_steal_count: rt.worker_steal_count(worker),
-            #[cfg(tokio_unstable)]
             total_steal_operations: rt.worker_steal_operations(worker),
-            #[cfg(tokio_unstable)]
             total_local_schedule_count: rt.worker_local_schedule_count(worker),
-            #[cfg(tokio_unstable)]
             total_overflow_count: rt.worker_overflow_count(worker),
-            #[cfg(tokio_unstable)]
             total_polls_count: rt.worker_poll_count(worker),
             total_busy_duration: rt.worker_total_busy_duration(worker),
-            #[cfg(tokio_unstable)]
             poll_time_histogram,
-        }
+        };
     }
 
     fn probe(&mut self, rt: &runtime::RuntimeMetrics, metrics: &mut RuntimeMetrics) {
